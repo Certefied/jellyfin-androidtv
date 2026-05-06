@@ -17,8 +17,6 @@ import androidx.lifecycle.repeatOnLifecycle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
@@ -58,12 +56,10 @@ import org.jellyfin.androidtv.util.KeyProcessor
 import org.jellyfin.playback.core.PlaybackManager
 import org.jellyfin.sdk.api.client.ApiClient
 import org.jellyfin.sdk.api.sockets.subscribe
-import org.jellyfin.sdk.model.api.BaseItemDto
 import org.jellyfin.sdk.model.api.LibraryChangedMessage
 import org.jellyfin.sdk.model.api.UserDataChangedMessage
 import org.koin.android.ext.android.inject
 import timber.log.Timber
-import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 class HomeRowsFragment : RowsSupportFragment(), AudioEventListener, View.OnKeyListener {
@@ -87,11 +83,6 @@ class HomeRowsFragment : RowsSupportFragment(), AudioEventListener, View.OnKeyLi
 	private var currentItem: BaseRowItem? = null
 	private var currentRow: ListRow? = null
 	private var justLoaded = true
-
-	// Latest selected item for the background loader. Updated synchronously on
-	// every focus change but consumed via a debounced collector so rapid scrolls
-	// don't trigger backdrop fetches per card.
-	private val selectedBackgroundItem = MutableStateFlow<BaseItemDto?>(null)
 
 	// Special rows
 	private val notificationsRow by lazy { NotificationsHomeFragmentRow(lifecycleScope, notificationsRepository) }
@@ -192,16 +183,6 @@ class HomeRowsFragment : RowsSupportFragment(), AudioEventListener, View.OnKeyLi
 			}
 		}
 
-		// Apply the backdrop only after the focus has settled. Without this every
-		// card the user scrolls past kicks off a backdrop fetch + decode, which is
-		// the dominant cause of scroll stutter on the home screen.
-		lifecycleScope.launch {
-			@OptIn(FlowPreview::class)
-			selectedBackgroundItem
-				.debounce(300.milliseconds)
-				.collectLatest { baseItem -> backgroundService.setBackground(baseItem) }
-		}
-
 		// Subscribe to Audio messages
 		mediaManager.addAudioEventListener(this)
 	}
@@ -299,7 +280,8 @@ class HomeRowsFragment : RowsSupportFragment(), AudioEventListener, View.OnKeyLi
 		) {
 			if (item !is BaseRowItem) {
 				currentItem = null
-				selectedBackgroundItem.value = null
+				//fill in default background
+				backgroundService.clearBackgrounds()
 			} else {
 				currentItem = item
 				currentRow = row as ListRow
@@ -307,7 +289,7 @@ class HomeRowsFragment : RowsSupportFragment(), AudioEventListener, View.OnKeyLi
 				val itemRowAdapter = row.adapter as? ItemRowAdapter
 				itemRowAdapter?.loadMoreItemsIfNeeded(itemRowAdapter.indexOf(item))
 
-				selectedBackgroundItem.value = item.baseItem
+				backgroundService.setBackground(item.baseItem)
 			}
 		}
 	}
