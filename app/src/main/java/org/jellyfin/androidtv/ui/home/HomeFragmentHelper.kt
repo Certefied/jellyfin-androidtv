@@ -58,6 +58,7 @@ class HomeFragmentHelper(
 			imageTypeLimit = 1,
 			limit = ITEM_LIMIT_NEXT_UP,
 			enableResumable = false,
+			enableTotalRecordCount = false,
 			fields = ItemRepository.browseFields
 		)
 
@@ -80,7 +81,7 @@ class HomeFragmentHelper(
 		// Maximum amount of items loaded for a row
 		private const val ITEM_LIMIT_RESUME = 50
 		private const val ITEM_LIMIT_RECORDINGS = 40
-		private const val ITEM_LIMIT_NEXT_UP = 50
+		private const val ITEM_LIMIT_NEXT_UP = 24
 		private const val ITEM_LIMIT_ON_NOW = 20
 	}
 }

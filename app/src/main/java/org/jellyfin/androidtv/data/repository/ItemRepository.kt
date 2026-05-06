@@ -23,15 +23,13 @@ object ItemRepository {
 		ItemFields.TRICKPLAY,
 	)
 
-	// Lighter field set for home screen rows - excludes heavy fields like
-	// MediaSources, MediaStreams, Chapters, Trickplay that aren't needed for display.
-	// Full item data is fetched when user selects an item.
+	// Minimal field set for home screen rows. Cards only render image, name,
+	// type-specific subtext (e.g. "x episodes" via CHILD_COUNT) and aspect
+	// ratio. OVERVIEW in particular adds significant payload per item and is
+	// not displayed on home cards. Full item data is fetched when the user
+	// opens an item.
 	val browseFields = setOf(
-		ItemFields.CAN_DELETE,
 		ItemFields.CHILD_COUNT,
-		ItemFields.DATE_CREATED,
-		ItemFields.GENRES,
-		ItemFields.OVERVIEW,
 		ItemFields.PRIMARY_IMAGE_ASPECT_RATIO,
 	)
 }
