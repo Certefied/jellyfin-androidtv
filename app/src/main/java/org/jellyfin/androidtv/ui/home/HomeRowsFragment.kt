@@ -88,6 +88,16 @@ class HomeRowsFragment : RowsSupportFragment(), AudioEventListener, View.OnKeyLi
 	private val notificationsRow by lazy { NotificationsHomeFragmentRow(lifecycleScope, notificationsRepository) }
 	private val nowPlaying by lazy { HomeFragmentNowPlayingRow(lifecycleScope, playbackManager, mediaManager) }
 
+	override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+		super.onViewCreated(view, savedInstanceState)
+
+		// Pre-inflate more rows than the viewport shows. Default RecyclerView cache
+		// keeps 2 detached views ready, which means scrolling to a fresh row pays
+		// the full first-inflate / first-compose cost on the main thread. Bumping
+		// the cache lets the framework warm up off-screen rows during idle.
+		verticalGridView?.setItemViewCacheSize(HOME_ROW_CACHE_SIZE)
+	}
+
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
 
@@ -292,5 +302,11 @@ class HomeRowsFragment : RowsSupportFragment(), AudioEventListener, View.OnKeyLi
 				backgroundService.setBackground(item.baseItem)
 			}
 		}
+	}
+
+	companion object {
+		// Number of off-screen rows to keep inflated. Higher = smoother first scroll
+		// but more memory.
+		private const val HOME_ROW_CACHE_SIZE = 8
 	}
 }
