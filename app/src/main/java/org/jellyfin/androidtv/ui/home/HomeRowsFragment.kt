@@ -15,10 +15,13 @@ import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -165,11 +168,16 @@ class HomeRowsFragment : RowsSupportFragment(), AudioEventListener, View.OnKeyLi
 
 		lifecycleScope.launch {
 			lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
-				api.webSocket.subscribe<UserDataChangedMessage>()
-					.onEach { refreshRows(force = true, delayed = false) }
-					.launchIn(this)
-
-				api.webSocket.subscribe<LibraryChangedMessage>()
+				// Coalesce bursts of UserData/Library change events (e.g. emitted by the
+				// server when playback ends or during a library scan) into a single
+				// refresh. Without this every event triggers a full row re-fetch,
+				// stacking expensive calls like Next Up.
+				@OptIn(FlowPreview::class)
+				merge(
+					api.webSocket.subscribe<UserDataChangedMessage>(),
+					api.webSocket.subscribe<LibraryChangedMessage>(),
+				)
+					.debounce(1.seconds)
 					.onEach { refreshRows(force = true, delayed = false) }
 					.launchIn(this)
 			}
