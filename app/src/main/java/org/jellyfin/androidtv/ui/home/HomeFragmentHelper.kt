@@ -13,6 +13,7 @@ import org.jellyfin.sdk.model.api.request.GetNextUpRequest
 import org.jellyfin.sdk.model.api.request.GetRecommendedProgramsRequest
 import org.jellyfin.sdk.model.api.request.GetRecordingsRequest
 import org.jellyfin.sdk.model.api.request.GetResumeItemsRequest
+import java.time.LocalDateTime
 
 class HomeFragmentHelper(
 	private val context: Context,
@@ -54,11 +55,17 @@ class HomeFragmentHelper(
 	}
 
 	fun loadNextUp(): HomeFragmentRow {
+		// Restrict the server-side scan to series with recent activity. Without
+		// a cutoff the Next Up endpoint walks every series the user has ever
+		// touched, which is the main source of slowness on large libraries.
+		val cutoff = LocalDateTime.now().minusYears(NEXT_UP_CUTOFF_YEARS)
+
 		val query = GetNextUpRequest(
 			imageTypeLimit = 1,
 			limit = ITEM_LIMIT_NEXT_UP,
 			enableResumable = false,
 			enableTotalRecordCount = false,
+			nextUpDateCutoff = cutoff,
 			fields = ItemRepository.browseFields
 		)
 
@@ -83,5 +90,11 @@ class HomeFragmentHelper(
 		private const val ITEM_LIMIT_RECORDINGS = 40
 		private const val ITEM_LIMIT_NEXT_UP = 24
 		private const val ITEM_LIMIT_ON_NOW = 20
+
+		// Series whose latest watch event is older than this fall out of the
+		// home Next Up row. Picked generously so people who pause a series for
+		// a while still see it; users who want truly old shows can navigate to
+		// the series directly.
+		private const val NEXT_UP_CUTOFF_YEARS = 2L
 	}
 }
