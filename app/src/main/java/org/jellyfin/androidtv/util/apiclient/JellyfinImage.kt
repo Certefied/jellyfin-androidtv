@@ -52,7 +52,6 @@ enum class JellyfinImageSource {
 	SERIES,
 	CHANNEL,
 	USER,
-	CHAPTER,
 }
 
 // UserDto
@@ -194,19 +193,6 @@ val BaseItemDto.seriesThumbImage
 		}
 	}
 
-val BaseItemDto.chapterImages
-	get() = chapters?.mapIndexed { index, chapter ->
-		JellyfinImage(
-			item = id,
-			source = JellyfinImageSource.CHAPTER,
-			type = ImageType.CHAPTER,
-			tag = chapter.imageTag.orEmpty(),
-			blurHash = null,
-			aspectRatio = null,
-			index = index,
-		)
-	}.orEmpty()
-
 val BaseItemDto.images
 	get() = listOfNotNull(
 		itemImages.values,
@@ -217,7 +203,6 @@ val BaseItemDto.images
 		listOfNotNull(channelPrimaryImage),
 		listOfNotNull(seriesPrimaryImage),
 		listOfNotNull(seriesThumbImage),
-		chapterImages,
 	).flatten()
 
 // BaseItemPerson

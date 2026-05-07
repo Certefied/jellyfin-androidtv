@@ -238,7 +238,7 @@ fun ItemRowAdapter.retrieveUserViews(api: ApiClient, userViewsRepository: UserVi
 
 			setItems(
 				items = filteredItems,
-				transform = { item, _ -> BaseItemDtoBaseRowItem(item, staticHeight = true) }
+				transform = { item, _ -> BaseItemDtoBaseRowItem(item) }
 			)
 
 			if (filteredItems.isEmpty()) removeRow()
