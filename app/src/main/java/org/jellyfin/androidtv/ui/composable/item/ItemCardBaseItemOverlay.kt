@@ -36,10 +36,7 @@ import org.koin.compose.koinInject
 
 @Composable
 @Stable
-fun ItemCardBaseItemOverlay(
-	item: BaseItemDto,
-	footer: (@Composable () -> Unit)? = null,
-) = Box(
+fun ItemCardBaseItemOverlay(item: BaseItemDto) = Box(
 	modifier = Modifier
 		.fillMaxSize()
 		.padding(Tokens.Space.spaceXs)
@@ -54,16 +51,10 @@ fun ItemCardBaseItemOverlay(
 		modifier = Modifier.align(Alignment.TopEnd)
 	)
 
-	Column(
-		modifier = Modifier.align(Alignment.BottomCenter),
-		verticalArrangement = Arrangement.spacedBy(Tokens.Space.spaceXs)
-	) {
-		ProgressIndicator(
-			item = item,
-		)
-
-		if (footer != null) footer()
-	}
+	ProgressIndicator(
+		item = item,
+		modifier = Modifier.align(Alignment.BottomCenter)
+	)
 }
 
 @Composable
